@@ -610,55 +610,53 @@
   </main>
 
   <script>
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyO6WLIpGh4h_2t-ARvtIfnTPKteOVuKtYK1pSigQATuDDtzBmXJAX0VGt9tUEKfJHM/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxG4YtX52ZR98EOAaat23M5tEvf5XMmH4iCDo3P0KsbIAs9b7Lx4yqWaUPhEJ3bhjkm/exec';
 
-    const form = document.getElementById('surveyForm');
-    const submitButton = document.getElementById('submitButton');
-    const formMessage = document.getElementById('formMessage');
+  const surveyForm = document.getElementById('surveyForm');
+  const submitButton = document.getElementById('submitButton');
+  const formMessage = document.getElementById('formMessage');
 
-    function showMessage(type, message) {
-      formMessage.className = 'form-message ' + type;
-      formMessage.textContent = message;
+  function showMessage(type, text) {
+    formMessage.className = 'form-message ' + type;
+    formMessage.textContent = text;
+  }
+
+  surveyForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+
+    if (
+      !GOOGLE_SCRIPT_URL ||
+      GOOGLE_SCRIPT_URL === '여기에_Apps_Script_웹앱_URL_넣기' ||
+      GOOGLE_SCRIPT_URL.includes('여기에')
+    ) {
+      showMessage('error', 'Google Apps Script 웹 앱 URL을 입력해주세요.');
+      return;
     }
 
-    form.addEventListener('submit', async function (event) {
-      event.preventDefault();
+    submitButton.disabled = true;
+    submitButton.textContent = '제출 중입니다...';
 
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
+    const formData = new FormData(surveyForm);
 
-      if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyO6WLIpGh4h_2t-ARvtIfnTPKteOVuKtYK1pSigQATuDDtzBmXJAX0VGt9tUEKfJHM/exec') {
-        showMessage('error', 'Google Apps Script 웹 앱 URL을 입력해주세요.');
-        return;
-      }
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+      });
 
-      submitButton.disabled = true;
-      submitButton.textContent = '제출 중입니다...';
-      formMessage.className = 'form-message';
-      formMessage.textContent = '';
+      showMessage('success', '만족도 조사가 정상 제출되었습니다. 감사합니다.');
+      surveyForm.reset();
 
-      const formData = new FormData(form);
-      const body = new URLSearchParams(formData);
+    } catch (error) {
+      console.error(error);
+      showMessage('error', '제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
 
-      try {
-        await fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          body: body
-        });
-
-        showMessage('success', '만족도 조사가 정상 제출되었습니다. 감사합니다.');
-        form.reset();
-
-      } catch (error) {
-        showMessage('error', '제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-      } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = '만족도 조사 제출하기';
-      }
-    });
-  </script>
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = '만족도 조사 제출하기';
+    }
+  });
+</script>
 </body>
 </html>
